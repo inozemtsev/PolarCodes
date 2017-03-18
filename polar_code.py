@@ -30,7 +30,7 @@ class PolarBase:
         
         message_extended = np.zeros(self.N)
         message_extended[self.indices] = message
-        encoded = self.kernel * message_extended
+        encoded = self.kernel @ message_extended
         return encoded
     
 class PolarCodeAWGN(PolarBase):
