@@ -19,7 +19,7 @@ class PolarBase:
             values = np.hstack((2 * values - values ** 2, values ** 2)).flatten()
             
         self.indices = np.argsort(values)[:K]
-        self.indices = np.array(list(map(lambda x: int(bin(x).zfill(n)[:1:-1], 2), self.indices)))
+        self.indices = np.array(list(map(lambda x: int(bin(x)[2:].zfill(n)[::-1], 2), self.indices)))
         
         for i in range(n-1):
             self.kernel = np.kron(self.kernel, kernel)
@@ -40,9 +40,9 @@ class PolarCodeAWGN(PolarBase):
         
 class PolarCodeBEC(PolarBase):
     def __init__(self, epsilon, N, K, kernel=np.array([[1, 1], [0, 1]])):
-        super(PolarCodeAWGN, self).__init__(epsilon, N, K, kernel)
+        super(PolarCodeBEC, self).__init__(epsilon, N, K, kernel)
         
 class PolarCodeBSC(PolarBase):
     def __init__(self, p, N, K, kernel=np.array([[1, 1], [0, 1]])):
         bhatt_param = (p * (1 - p)) ** 0.5
-        super(PolarCodeAWGN, self).__init__(bhatt_param, N, K, kernel)
+        super(PolarCodeBSC, self).__init__(bhatt_param, N, K, kernel)
