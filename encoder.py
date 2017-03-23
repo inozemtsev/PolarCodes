@@ -54,7 +54,8 @@ class PolarBase:
             values = values[:, np.newaxis]
             values = np.hstack((mode.checknode_mean(values), mode.varnode_mean(values))).flatten()
 
-        self.indices = np.argsort(values)[:K]
+        self.zvalues = values
+        self.indices = np.argsort(self.zvalues)[:K]
         self.indices = np.array(list(map(lambda x: int(bin(x)[2:].zfill(n)[::-1], 2), self.indices)))
 
         for i in range(n-1):
