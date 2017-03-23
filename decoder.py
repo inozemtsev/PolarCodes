@@ -40,7 +40,7 @@ def initializeDataStructures():
             for d in range(2**(m-lambd)):
                 arrayPointer_P[lambd][s][d]=[0]*2;
                 arrayPointer_C[lambd][s][d]=[0]*2;
-
+        
     for lambd in range(m+1):
         for s in range(L):
             inactiveArrayIndices[lambd].append(s);
@@ -88,7 +88,7 @@ def getArrayPointer_P(lambd,l):
         arrayReferenceCount[lambd][s]=arrayReferenceCount[lambd][s]-1;
         arrayReferenceCount[lambd][s_t]=1;
         pathIndexToArrayIndex[lambd][l]=s_t;
-
+    
     return arrayPointer_P[lambd][s_t]
 
 def getArrayPointer_C(lambd,l):
@@ -103,7 +103,7 @@ def getArrayPointer_C(lambd,l):
         arrayReferenceCount[lambd][s]=arrayReferenceCount[lambd][s]-1;
         arrayReferenceCount[lambd][s_t]=1;
         pathIndexToArrayIndex[lambd][l]=s_t;
-
+    
     return arrayPointer_C[lambd][s_t]
 
 def pathIndexInactive(l):
@@ -200,7 +200,7 @@ def continuePaths_UnfrozenBit(phi):
                     ind_y=d;
         contForks[ind_x][ind_y]=True;
         k=k+1;
-
+    
     for l in range(L):
         if pathIndexInactive(l):
             continue;
@@ -237,48 +237,46 @@ def findMostProbablePath():
 
 "----------------------------------"
 "Here we start the main loop"
+
+def Decoder(y_received,u_frozen,F_set,L_):
+    global n;
+    n=len(y_received);
+    global m;
+    global L, u
+    L = L_
+    u = u_frozen
+    m=int(np.log2(n));
+    initializeDataStructures();
+    l=assignInitialPath();
+    P_0=getArrayPointer_P(0,l);
+    for beta in range(n):
+        P_0[beta][0]=stop(y_received[beta],0);
+        P_0[beta][1]=stop(y_received[beta],1);
+    for phi in range(n):
+        recursivelyCalcP(m,phi);
+        if phi in F_set:
+            continuePaths_FrozenBit(phi);
+        else:
+            continuePaths_UnfrozenBit(phi);
+        if phi%2==1:
+            recursivelyUpdateC(m,phi);
+
+    l=findMostProbablePath();
+    C_0=getArrayPointer_C(0,l);
+    codeword=[];
+    for beta in range(n):
+        codeword.append(C_0[beta][0]);
+    return codeword
+
+def NoiseAdder(c,var):
+    for i in range(len(c)):
+        c[i]=c[i]+np.random.randn()*var;
+    return c
+
 import numpy as np
 global c;
 global u;
 global n;
-F=[0,1,2,4];
-UnF=[7,3,5,6]; "We have to decode the vector"
-u=[0,0,0,-1,0,-1,-1,-1];"the set of frozen (known) bits."
-s=[0,0,0,0]; "The source symbols"
-k=4; "the dimension of the code"
-c=[1,1,1,1,0,0,0,0]; "codeword to test"
-n=len(c);
 global L; "the length of the list"
-L=1;
-global m;
-m=int(np.log2(n)); "the log of the length of the code"
-global snr;
-snr=10;
 global var;
 var=0.001;
-y=[];
-"Now I have to add some noise";
-for i in range(n):
-    y.append(round((c[i]+np.random.randn()*var),5));
-"This vector y I have to decode"
-initializeDataStructures();
-l=assignInitialPath();
-P_0=getArrayPointer_P(0,l);
-for beta in range(n):
-    P_0[beta][0]=stop(y[beta],0);
-    P_0[beta][1]=stop(y[beta],1);
-for phi in range(n):
-    recursivelyCalcP(m,phi);
-    if phi in F:
-        continuePaths_FrozenBit(phi);
-    else:
-        continuePaths_UnfrozenBit(phi);
-    if phi%2==1:
-        recursivelyUpdateC(m,phi);
-
-l=findMostProbablePath();
-C_0=getArrayPointer_C(0,l);
-codeword=[];
-for beta in range(n):
-    codeword.append(C_0[beta][0]);
-print(codeword)

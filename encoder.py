@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import brentq
+from decoder import Decoder
 
 __all__ = ['PolarBase', 'PolarCodeAWGN', 'PolarCodeBEC', 'PolarCodeBSC']
 
@@ -38,7 +39,7 @@ class CodeGenGaussian:
 
 
 class PolarBase:
-    def __init__(self, bhatt_param, N, K, kernel=np.array([[1, 1], [0, 1]]), mode=CodeGenGaussian()):
+    def __init__(self, bhatt_param, N, K, kernel=np.array([[1, 0], [1, 1]]), mode=CodeGenGaussian()):
         if (np.log(N) / np.log(2)) % 1 != 0:
             raise ValueError('N is not a power of 2')
 
@@ -55,11 +56,14 @@ class PolarBase:
             values = np.hstack((mode.checknode_mean(values), mode.varnode_mean(values))).flatten()
 
         self.zvalues = values
-        self.indices = np.argsort(self.zvalues)[:K]
+        self.indices = np.argsort(self.zvalues)
         self.indices = np.array(list(map(lambda x: int(bin(x)[2:].zfill(n)[::-1], 2), self.indices)))
+        self.frozen_indices = self.indices[K:]
+        self.indices = self.indices[:K]
 
         for i in range(n-1):
             self.kernel = np.kron(self.kernel, kernel)
+        self.kernel_inv = np.linalg.inv(self.kernel)
 
     def encode(self, message):
         if message.shape[0] != self.K:
@@ -67,8 +71,15 @@ class PolarBase:
 
         message_extended = np.zeros(self.N)
         message_extended[self.indices] = message
-        encoded = (self.kernel @ message_extended) % 2
+        encoded = (message_extended @ self.kernel) % 2
         return encoded
+    
+    def decode(self, message, L):
+        u_frozen = np.zeros_like(message)
+        u_frozen[self.indices] = -1
+        codeword = Decoder(message, u_frozen, self.frozen_indices, L)
+        print(codeword)
+        return (codeword @ self.kernel_inv) % 2
 
 
 class PolarCodeAWGN(PolarBase):
