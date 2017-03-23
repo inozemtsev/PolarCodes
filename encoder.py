@@ -20,7 +20,7 @@ def theta1(x):
 
 
 class PolarBase:
-    def __init__(self, bhatt_param, N, K, kernel):
+    def __init__(self, bhatt_param, N, K, kernel=np.array([[1, 1], [0, 1]])):
         if (np.log(N) / np.log(2)) % 1 != 0:
             raise ValueError('N is not a power of 2')
 
@@ -50,16 +50,19 @@ class PolarBase:
         encoded = (self.kernel @ message_extended) % 2
         return encoded
 
+
 class PolarCodeAWGN(PolarBase):
-    def __init__(self, Ec, N0, N, K, kernel=np.array([[1, 1], [0, 1]])):
+    def __init__(self, Ec, N0, N, K):
         bhatt_param = np.exp(-Ec / N0)
         super(PolarCodeAWGN, self).__init__(bhatt_param, N, K, kernel)
 
+
 class PolarCodeBEC(PolarBase):
-    def __init__(self, epsilon, N, K, kernel=np.array([[1, 1], [0, 1]])):
+    def __init__(self, epsilon, N, K):
         super(PolarCodeBEC, self).__init__(epsilon, N, K, kernel)
 
+
 class PolarCodeBSC(PolarBase):
-    def __init__(self, p, N, K, kernel=np.array([[1, 1], [0, 1]])):
+    def __init__(self, p, N, K):
         bhatt_param = (p * (1 - p)) ** 0.5
         super(PolarCodeBSC, self).__init__(bhatt_param, N, K, kernel)
