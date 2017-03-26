@@ -63,7 +63,6 @@ class PolarBase:
 
         for i in range(n-1):
             self.kernel = np.kron(self.kernel, kernel)
-        self.kernel_inv = np.linalg.inv(self.kernel)
 
     def encode(self, message):
         if message.shape[0] != self.K:
@@ -78,8 +77,7 @@ class PolarBase:
         u_frozen = np.zeros_like(message)
         u_frozen[self.indices] = -1
         codeword = Decoder(message, u_frozen, self.frozen_indices, L)
-        print(codeword)
-        return (codeword @ self.kernel_inv) % 2
+        return ((codeword @ self.kernel) % 2)[self.indices]
 
 
 class PolarCodeAWGN(PolarBase):
@@ -91,9 +89,3 @@ class PolarCodeAWGN(PolarBase):
 class PolarCodeBEC(PolarBase):
     def __init__(self, epsilon, N, K, **kwargs):
         super(PolarCodeBEC, self).__init__(epsilon, N, K, **kwargs)
-
-
-class PolarCodeBSC(PolarBase):
-    def __init__(self, p, N, K, **kwargs):
-        bhatt_param = (p * (1 - p)) ** 0.5
-        super(PolarCodeBSC, self).__init__(bhatt_param, N, K, **kwargs)
